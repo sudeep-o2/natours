@@ -1,9 +1,12 @@
 const express = require('express');
 const fs = require('fs');
+const morgan = require('morgan');
 const app = express();
 
 //middleware
 app.use(express.json());
+
+app.use(morgan('dev'));
 
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
@@ -21,6 +24,8 @@ const tours = JSON.parse(
 // app.post('/',(req,res) => {
 //     res.send('u can post data here');
 // });
+
+// route handlers
 
 const getAllTours = (req, res) => {
   console.log(req.requestTime);
@@ -120,6 +125,8 @@ const createTour = (req, res) => {
 // app.get('/api/v1/tours', getAllTours);
 // app.post('/api/v1/tours', createTour);   // same
 
+// routes
+
 app.route('/api/v1/tours').get(getAllTours).post(createTour); // same
 
 app
@@ -129,6 +136,8 @@ app
   .delete(deleteTour);
 
 const port = 3000;
+
+// start server
 
 app.listen(port, () => {
   console.log(`app running on port ${port}`);
