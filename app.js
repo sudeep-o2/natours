@@ -1,5 +1,6 @@
 const express = require('express');
 const fs = require('fs');
+
 const morgan = require('morgan');
 const app = express();
 
@@ -9,16 +10,20 @@ const userRouter = require('./routes/userRoutes');
 //middleware
 app.use(express.json());
 
-app.use(morgan('dev'));
+app.use(express.static(`${__dirname}/public`)); // used to serve static files from folder
+
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
 
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
   next();
 });
 
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
-);
+// const tours = JSON.parse(
+//   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
+// );
 
 // app.get('/',(req,res) => {
 //     res.status(200).json({message:'hello from server',name:'lord'});
