@@ -22,6 +22,7 @@ if (process.env.NODE_ENV === 'development') {
 
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
+  console.log(x);
   next();
 });
 
@@ -66,6 +67,6 @@ app.all('*', (req, res, next) => {
   next(new AppError(`could not find ${req.originalUrl} on this server`, 404));
 });
 
-app.use(globalErrorController);  
+app.use(globalErrorController);
 
 module.exports = app;

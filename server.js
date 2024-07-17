@@ -4,6 +4,11 @@ dotenv.config({ path: './.env' });
 const Mongoose = require('mongoose');
 const app = require('./app');
 
+process.on('uncaughtException', (err) => {
+  console.log(err.name, err.message);
+  console.log('UNCAUGHT EXCEPTION!   SHUTTING DOWN...');
+  process.exit(1);
+});
 //console.log(app.get('env'));
 
 //console.log(process.env);  // to log all env variables
@@ -18,14 +23,10 @@ Mongoose.connect(DB, {
   useCreateIndex: true,
   useUnifiedTopology: true,
   useFindAndModify: false,
-})
-  .then((con) => {
-    //console.log(con.connections);
-    console.log('db connected');
-  })
-  .catch((err) => {
-    console.log(err);
-  });
+}).then((con) => {
+  //console.log(con.connections);
+  console.log('db connected');
+});
 
 // const testTour = new Tour({
 //   name: 'The Hill Hiking',
@@ -41,6 +42,14 @@ Mongoose.connect(DB, {
 // start server
 const port = process.env.PORT || 3000;
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`app running on port ${port}`);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.log(err.name, err.message);
+  console.log('UNHANDLED REJECTION!   SHUTTING DOWN...');
+  server.close(() => {
+    process.exit(1);
+  });
 });
