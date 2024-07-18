@@ -119,7 +119,6 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
 });
 
 exports.getTour = catchAsync(async (req, res, next) => {
-  console.log(x);
   //   console.log(req.params);
   //   console.log(req.params.id);
 

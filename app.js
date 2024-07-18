@@ -22,7 +22,6 @@ if (process.env.NODE_ENV === 'development') {
 
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
-  console.log(x);
   next();
 });
 
