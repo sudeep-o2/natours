@@ -1,6 +1,7 @@
 const express = require('express');
 
 const tourController = require('../controllers/tourController');
+const authController = require('../controllers/authController');
 
 const app = express();
 
@@ -17,7 +18,7 @@ router.route('/monthly-plan/:year').get(tourController.getMonthlyCounts);
 
 router
   .route('/')
-  .get(tourController.getAllTours)
+  .get(authController.protect, tourController.getAllTours)
   .post(tourController.createTour); // tourController.checkBody is a middleware used to check the request data is present in required pattern or not
 
 router
