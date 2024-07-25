@@ -37,6 +37,8 @@ const sendErrorProd = (err, res) => {
     res.status(err.statusCode).json({
       status: err.status,
       message: err.message,
+
+      stack: err.stack,
     });
   }
   // progrmming or other errors, please dont leak the errors to the clients
