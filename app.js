@@ -5,24 +5,67 @@ const fs = require('fs');
 const morgan = require('morgan');
 
 const app = express();
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongosanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const AppError = require('./utils/appError');
 const globalErrorController = require('./controllers/errorController');
 
-//middleware
-app.use(express.json());
+// Global middlewares
 
-app.use(express.static(`${__dirname}/public`)); // used to serve static files from folder
+// set security HTTP headers
+app.use(helmet());
+
+// body parser , reading data from body into req.body
+app.use(express.json({ limit: '10kb' })); // inside bracket is not mandatory
+
+// Data sanitization against NoSQL querry injection
+app.use(mongosanitize());
+
+// Data sanitization against XSS
+app.use(xss());
+
+// Prevent parameter pollution
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'price',
+      'ratingsQuantity',
+      'ratingsAverage',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  }),
+);
+
+// used to serve static files from folder
+app.use(express.static(`${__dirname}/public`));
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// limit requests from same api
+const limiter = rateLimit({
+  windowMs: 30 * 60 * 1000, // 30 minutes
+  limit: 100, // Limit each IP to 100 requests per `window` (here, per 30 minutes).
+  message:
+    'you have reached your maximum request limit try again after half an hour',
+});
+
+app.use('/api', limiter);
+
+// test middleware
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
-  console.log(req.headers);
+  // console.log(req.headers);
   next();
 });
 
