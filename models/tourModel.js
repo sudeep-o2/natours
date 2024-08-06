@@ -1,5 +1,6 @@
 const Mongoose = require('mongoose');
 const slugify = require('slugify');
+const User = require('./userModel');
 //const validator = require('validator');
 
 const tourSchema = new Mongoose.Schema(
@@ -102,6 +103,12 @@ const tourSchema = new Mongoose.Schema(
         day: Number,
       },
     ],
+    guides: [
+      {
+        type: Mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
@@ -137,17 +144,33 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
-tourSchema.post(/^find/, function (doc, next) {
-  console.log(`time taken for Query to execute is ${Date.now() - this.start} `);
-  //console.log(doc);
+//
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
   next();
 });
+
+// embedding the guides in tours
+// tourSchema.pre('save', async function (next) {
+//   const guidePromise = this.guides.map(async (id) => await User.findById(id));
+//   this.guides = await Promise.all(guidePromise);
+//   next();
+// });
 
 // Aggregation pipeline middleware
 
 tourSchema.pre('aggregate', function (next) {
   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
   console.log(this.pipeline());
+  next();
+});
+
+tourSchema.post(/^find/, function (doc, next) {
+  console.log(`time taken for Query to execute is ${Date.now() - this.start} `);
+  //console.log(doc);
   next();
 });
 
