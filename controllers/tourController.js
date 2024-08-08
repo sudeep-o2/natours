@@ -4,6 +4,7 @@ const Tour = require('../models/tourModel');
 const ApiFeatures = require('../utils/apiFeatures');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
+const factory = require('./handlerFactory');
 
 // const tours = JSON.parse(
 //   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`),
@@ -122,7 +123,7 @@ exports.getTour = catchAsync(async (req, res, next) => {
   //   console.log(req.params);
   //   console.log(req.params.id);
 
-  const tour = await Tour.findById(req.params.id);
+  const tour = await Tour.findById(req.params.id).populate('reviews');
 
   // if id is not valid we return the request with 404 error using AppError class
   if (!tour) {
@@ -137,40 +138,25 @@ exports.getTour = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.updateTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
+exports.updateTour = factory.updateOne(Tour);
 
-  // if id is not valid we return the request with 404 error using AppError class
-  if (!tour) {
-    return next(new AppError('No tour is available for this id', 404));
-  }
+exports.deleteTour = factory.deleteOne(Tour);
 
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour: tour,
-    },
-  });
-});
+// exports.deleteTour = catchAsync(async (req, res, next) => {
+//   const tour = await Tour.findByIdAndDelete(req.params.id);
 
-exports.deleteTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findByIdAndDelete(req.params.id);
+//   // if id is not valid we return the request with 404 error using AppError class
+//   if (!tour) {
+//     return next(new AppError('No tour is available for this id', 404));
+//   }
 
-  // if id is not valid we return the request with 404 error using AppError class
-  if (!tour) {
-    return next(new AppError('No tour is available for this id', 404));
-  }
-
-  res.status(204).json({
-    status: 'success',
-    data: {
-      tour: null,
-    },
-  });
-});
+//   res.status(204).json({
+//     status: 'success',
+//     data: {
+//       tour: null,
+//     },
+//   });
+// });
 
 exports.createTour = catchAsync(async (req, res, next) => {
   // console.log(req.body);

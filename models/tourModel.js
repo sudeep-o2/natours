@@ -120,6 +120,13 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
+// (virtual populate) virtual field of Tour to attach reviews to it
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
+
 // Mongoose
 // Document middleware - runs before .save() and .create()  also called as (pre hook)
 tourSchema.pre('save', function (next) {
