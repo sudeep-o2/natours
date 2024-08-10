@@ -25,17 +25,31 @@ router
 
 router.route('/tour-stats').get(tourController.getTourStats);
 
-router.route('/monthly-plan/:year').get(tourController.getMonthlyCounts);
+router
+  .route('/monthly-plan/:year')
+  .get(
+    authController.protect,
+    authController.restrictTo('lead-guide', 'admin'),
+    tourController.getMonthlyCounts,
+  );
 
 router
   .route('/')
   .get(authController.protect, tourController.getAllTours)
-  .post(tourController.createTour); // tourController.checkBody is a middleware used to check the request data is present in required pattern or not
 
+  .post(
+    authController.protect,
+    authController.restrictTo('admin', 'lead-guide'),
+    tourController.createTour,
+  ); // tourController.checkBody is a middleware used to check the request data is present in required pattern or not
 router
   .route('/:id')
   .get(tourController.getTour)
-  .patch(tourController.updateTour)
+  .patch(
+    authController.protect,
+    authController.restrictTo('lead-guide', 'admin'),
+    tourController.updateTour,
+  )
   .delete(
     authController.protect,
     authController.restrictTo('lead-guide', 'admin'),

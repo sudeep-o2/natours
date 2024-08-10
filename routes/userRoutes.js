@@ -10,15 +10,16 @@ router.post('/login', authController.login);
 router.post('/forgotPassword', authController.forgotPassword);
 router.post('/resetPassword/:token', authController.resetforgotPassword);
 
-router.patch('/updateMe', authController.protect, userController.updateMe);
+router.use(authController.protect); // middleware used to check user is signed in or not before accessing any below routes
 
-router.patch(
-  '/updateMyPassword',
-  authController.protect,
-  userController.updateMe,
-);
+router.patch('/updateMyPassword', userController.updateMe);
 
-router.delete('/deleteMe', authController.protect, userController.deleteMe);
+router.get('/me', userController.getMe, userController.getUser);
+
+router.patch('/updateMe', userController.updateMe);
+router.delete('/deleteMe', userController.deleteMe);
+
+router.use(authController.restrictTo('admin'));
 
 router.route('/').get(userController.getAllUsers).post(userController.addUser);
 
