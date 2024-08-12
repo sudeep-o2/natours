@@ -16,6 +16,8 @@ const router = express.Router();
 //     reviewController.createReview,
 //   );
 
+router.route('/all').get(tourController.gat);
+
 router.use('/:tourId/reviews', reviewRouter);
 
 // router.param('id', tourController.checkId);
@@ -29,7 +31,7 @@ router
   .route('/monthly-plan/:year')
   .get(
     authController.protect,
-    authController.restrictTo('lead-guide', 'admin'),
+    authController.restrictTo('lead-guide', 'admin', 'guide'),
     tourController.getMonthlyCounts,
   );
 

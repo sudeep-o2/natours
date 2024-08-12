@@ -237,3 +237,45 @@ exports.getMonthlyCounts = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.gat = async (req, res) => {
+  try {
+    // 1 filtering
+    const queryObj = { ...req.query };
+    const excludeFields = ['page', 'sort', 'limit', 'fields'];
+    excludeFields.forEach((el) => delete queryObj[el]);
+
+    // advanced filtering
+    const querStr = JSON.stringify(queryObj);
+    const replacedString = querStr
+      .replace(/"gte":/g, '"$gte":')
+      .replace(/"lt":/g, '"$lt":')
+      .replace(/"gt":/g, '"$gt":')
+      .replace(/"lte":/g, '"$lte":');
+
+    let query = Tour.find(JSON.parse(replacedString));
+
+    // sorting
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-createdAt');
+    }
+
+    const tours = await query;
+
+    res.status(200).json({
+      status: 'success',
+      results: tours.length,
+      data: {
+        tours,
+      },
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'fail',
+      message: err,
+    });
+  }
+};
