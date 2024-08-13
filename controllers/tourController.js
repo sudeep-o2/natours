@@ -39,10 +39,65 @@ const factory = require('./handlerFactory');
 
 exports.aliasTopTours = (req, res, next) => {
   req.query.limit = '5';
-  req.query.sort = '-ratingsAverage,-price';
+  req.query.sort = '-ratingsAverage,price';
   req.query.fields = 'name,price,difficulty,summary,ratingsAverage';
   next();
 };
+
+class apiFeatures {
+  constructor(query, queryString) {
+    this.query = query;
+    this.queryString = queryString;
+  }
+
+  filter() {
+    const queryObj = { ...this.queryString };
+    const excludeFields = ['page', 'sort', 'limit', 'fields'];
+    excludeFields.forEach((el) => delete queryObj[el]);
+
+    // advanced filtering
+    const querStr = JSON.stringify(queryObj);
+    const replacedString = querStr
+      .replace(/"gte":/g, '"$gte":')
+      .replace(/"lt":/g, '"$lt":')
+      .replace(/"gt":/g, '"$gt":')
+      .replace(/"lte":/g, '"$lte":');
+
+    this.query = this.query.find(JSON.parse(replacedString));
+
+    return this;
+  }
+
+  sort() {
+    if (this.queryString.sort) {
+      const sortBy = this.queryString.sort.split(',').join(' ');
+      this.query = this.query.sort(sortBy);
+    } else {
+      this.query = this.query.sort('-createdAt');
+    }
+    return this;
+  }
+
+  limit() {
+    if (this.queryString.fields) {
+      const fields = this.queryString.fields.split(',').join(' ');
+      this.query = this.query.select(fields);
+    } else {
+      this.query = this.query.select('-__v');
+    }
+    return this;
+  }
+
+  paginate() {
+    const page = this.queryString.page * 1 || 1;
+    const limit = this.queryString.limit * 1 || 100;
+    const skip = (page - 1) * limit;
+
+    this.query = this.query.skip(skip).limit(limit);
+
+    return this;
+  }
+}
 
 exports.getAllTours = factory.getAll(Tour);
 // catchAsync(async (req, res, next) => {
@@ -240,30 +295,14 @@ exports.getMonthlyCounts = catchAsync(async (req, res, next) => {
 
 exports.gat = async (req, res) => {
   try {
-    // 1 filtering
-    const queryObj = { ...req.query };
-    const excludeFields = ['page', 'sort', 'limit', 'fields'];
-    excludeFields.forEach((el) => delete queryObj[el]);
+    // execute query
+    const features = new apiFeatures(Tour, req.query)
+      .filter()
+      .sort()
+      .limit()
+      .paginate();
 
-    // advanced filtering
-    const querStr = JSON.stringify(queryObj);
-    const replacedString = querStr
-      .replace(/"gte":/g, '"$gte":')
-      .replace(/"lt":/g, '"$lt":')
-      .replace(/"gt":/g, '"$gt":')
-      .replace(/"lte":/g, '"$lte":');
-
-    let query = Tour.find(JSON.parse(replacedString));
-
-    // sorting
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(',').join(' ');
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort('-createdAt');
-    }
-
-    const tours = await query;
+    const tours = await features.query;
 
     res.status(200).json({
       status: 'success',
@@ -279,3 +318,58 @@ exports.gat = async (req, res) => {
     });
   }
 };
+
+exports.gts = catchAsync(async (req, res, next) => {
+  const stats = await Tour.aggregate([
+    {
+      $match: { ratingsAverage: { $gte: 4.5 } },
+    },
+    {
+      $group: {
+        _id: '$difficulty',
+        num: { $sum: 1 },
+        numRatings: { $sum: '$ratingsQuantity' },
+        avgRating: { $avg: '$ratingsAverage' },
+        avgPrice: { $avg: '$price' },
+        minPrice: { $min: '$price' },
+        maxPrice: { $max: '$price' },
+      },
+    },
+    {
+      $sort: { avgPrice: 1 },
+    },
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      stats,
+    },
+  });
+});
+
+exports.getMonthlyTour = catchAsync(async (req, res, next) => {
+  const year = req.params.year * 1;
+  console.log(year);
+
+  const mTours = await Tour.aggregate([
+    {
+      $unwind: '$startDates',
+    },
+    {
+      $match: {
+        startDates: {
+          $gte: new Date(`${year}-01-01`),
+          $lte: new Date(`${year}-12-31`),
+        },
+      },
+    },
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      mTours,
+    },
+  });
+});

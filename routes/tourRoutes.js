@@ -16,7 +16,11 @@ const router = express.Router();
 //     reviewController.createReview,
 //   );
 
+// test routes
 router.route('/all').get(tourController.gat);
+router.route('/tstats').get(tourController.gts);
+router.route('/m-stat/:year').get(tourController.getMonthlyTour);
+//
 
 router.use('/:tourId/reviews', reviewRouter);
 
