@@ -350,7 +350,6 @@ exports.gts = catchAsync(async (req, res, next) => {
 
 exports.getMonthlyTour = catchAsync(async (req, res, next) => {
   const year = req.params.year * 1;
-  console.log(year);
 
   const mTours = await Tour.aggregate([
     {
@@ -363,6 +362,22 @@ exports.getMonthlyTour = catchAsync(async (req, res, next) => {
           $lte: new Date(`${year}-12-31`),
         },
       },
+    },
+    {
+      $group: {
+        _id: { $month: '$startDates' },
+        numTourStarts: { $sum: 1 },
+        tours: { $push: '$name' },
+      },
+    },
+    {
+      $addFields: { month: '$_id' },
+    },
+    {
+      $project: { _id: 0 },
+    },
+    {
+      $sort: { numTourStarts: -1 },
     },
   ]);
 

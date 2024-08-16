@@ -184,6 +184,8 @@ tourSchema.post(/^find/, function (doc, next) {
   next();
 });
 
+tourSchema.post('aggregate', function () {});
+
 const Tour = Mongoose.model('Tour', tourSchema);
 
 module.exports = Tour;
