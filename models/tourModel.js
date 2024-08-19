@@ -36,6 +36,7 @@ const tourSchema = new Mongoose.Schema(
       default: 4,
       min: [1, 'minimum rating should be 1'],
       max: [5, 'maximum rating should be 5'],
+      set: (val) => Math.round(val * 10) / 10,
     },
     ratingsQuantity: {
       type: Number,
@@ -183,8 +184,6 @@ tourSchema.post(/^find/, function (doc, next) {
   //console.log(doc);
   next();
 });
-
-tourSchema.post('aggregate', function () {});
 
 const Tour = Mongoose.model('Tour', tourSchema);
 

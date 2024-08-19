@@ -388,3 +388,5 @@ exports.getMonthlyTour = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.getToursWithin = (req, res, next) => {};
