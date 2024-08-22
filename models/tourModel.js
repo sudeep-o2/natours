@@ -80,7 +80,7 @@ const tourSchema = new Mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    startlocation: {
+    startLocation: {
       // GeoJSON
       type: {
         type: String,
@@ -88,7 +88,7 @@ const tourSchema = new Mongoose.Schema(
         enum: ['Point'],
       },
       coordinates: [Number],
-      adress: String,
+      address: String,
       description: String,
     },
     locations: [
@@ -99,7 +99,7 @@ const tourSchema = new Mongoose.Schema(
           enum: ['Point'],
         },
         coordinates: [Number],
-        adress: String,
+        address: String,
         description: String,
         day: Number,
       },
@@ -119,6 +119,7 @@ const tourSchema = new Mongoose.Schema(
 
 tourSchema.index({ price: 1, ratingsAverage: -1 });
 tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation: '2dsphere' });
 
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
@@ -173,11 +174,12 @@ tourSchema.pre(/^find/, function (next) {
 
 // Aggregation pipeline middleware
 
-tourSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  console.log(this.pipeline());
-  next();
-});
+// this is coming before geoNear and so geoNear needs to be first first stage in aggregation pipeline
+// tourSchema.pre('aggregate', function (next) {
+//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+//   console.log(this.pipeline());
+//   next();
+// });
 
 tourSchema.post(/^find/, function (doc, next) {
   console.log(`time taken for Query to execute is ${Date.now() - this.start} `);

@@ -49,7 +49,11 @@ router
     tourController.createTour,
   ); // tourController.checkBody is a middleware used to check the request data is present in required pattern or not
 
-router.route('/tours-within/:distance/center/:latlng/unit/:unit',tourController.getToursWithin);
+router
+  .route('/tours-within/:distance/center/:latlng/unit/:unit')
+  .get(tourController.getToursWithin);
+
+router.route('/distances/:latlng/unit/:unit').get(tourController.getDistancs);
 
 router
   .route('/:id')
