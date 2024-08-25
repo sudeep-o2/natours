@@ -457,3 +457,22 @@ exports.getDistancs = catchAsync(async (req, res, next) => {
     data: { data: distances },
   });
 });
+
+exports.getTourGroupAverages = catchAsync(async (req, res, next) => {
+  const tours = await Tour.aggregate([
+    {
+      $group: {
+        _id: '$ratingsAverage',
+        num: { $sum: 1 },
+        tours: { $push: '$name' },
+      },
+    },
+  ]);
+
+  res.status(200).json({
+    result: 'success',
+    data: {
+      tours,
+    },
+  });
+});

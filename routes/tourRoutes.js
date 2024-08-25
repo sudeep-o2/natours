@@ -39,6 +39,8 @@ router
     tourController.getMonthlyCounts,
   );
 
+router.route('/getTourGroupAverages').get(tourController.getTourGroupAverages);
+
 router
   .route('/')
   .get(authController.protect, tourController.getAllTours)

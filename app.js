@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 
 const fs = require('fs');
@@ -14,8 +15,16 @@ const hpp = require('hpp');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
+const viewRouter = require('./routes/viewRoutes');
 const AppError = require('./utils/appError');
 const globalErrorController = require('./controllers/errorController');
+
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+
+// used to serve static files from folder
+// app.use(express.static(`${__dirname}/public`)); or
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Global middlewares
 
@@ -45,9 +54,6 @@ app.use(
     ],
   }),
 );
-
-// used to serve static files from folder
-app.use(express.static(`${__dirname}/public`));
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
@@ -93,8 +99,7 @@ app.use((req, res, next) => {
 // app.get('/api/v1/tours', getAllTours);
 // app.post('/api/v1/tours', createTour);   // same
 
-// routes
-
+app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
