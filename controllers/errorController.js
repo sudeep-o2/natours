@@ -22,23 +22,32 @@ const handleValidationErrorDB = (err) => {
 const handleJWTError = (err) =>
   new AppError('Invalid token. please login again ', 401);
 
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack,
-  });
+const sendErrorDev = (err, req, res) => {
+  // API
+  if (req.originalUrl.startsWith('/api')) {
+    res.status(err.statusCode).json({
+      status: err.status,
+      error: err,
+      message: err.message,
+      stack: err.stack,
+    });
+  } else {
+    // RENDERED WEBSITE
+    res.status(err).render('error', {
+      title: 'something went wrong',
+      msg: err.message,
+    });
+  }
 };
 
-const sendErrorProd = (err, res) => {
+const sendErrorProd = (err, req, res) => {
   // operational errors , trusted errors, send response to client
   if (err.isOperational) {
     res.status(err.statusCode).json({
       status: err.status,
       message: err.message,
 
-      stack: err.stack,
+      // stack: err.stack,
     });
   }
   // progrmming or other errors, please dont leak the errors to the clients
@@ -57,7 +66,7 @@ module.exports = (err, req, res, next) => {
   err.status = err.status || 'error';
 
   if (process.env.NODE_ENV === 'production') {
-    sendErrorProd(err, res);
+    sendErrorProd(err, req, res);
   } else if (process.env.NODE_ENV === 'development') {
     let error = { ...err };
     // console.log(error);
@@ -66,6 +75,6 @@ module.exports = (err, req, res, next) => {
     if (error.name === 'ValidatorError') error = handleValidationErrorDB(error);
     if (error.name === 'JsonWebTokenError') error = handleJWTError(error);
 
-    sendErrorDev(error, res);
+    sendErrorDev(error, req, res);
   }
 };
