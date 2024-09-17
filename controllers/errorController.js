@@ -23,42 +23,60 @@ const handleJWTError = (err) =>
   new AppError('Invalid token. please login again ', 401);
 
 const sendErrorDev = (err, req, res) => {
-  // API
+  // (A)API
   if (req.originalUrl.startsWith('/api')) {
-    res.status(err.statusCode).json({
+    console.log(req.originalUrl);
+    return res.status(err.statusCode).json({
       status: err.status,
       error: err,
       message: err.message,
       stack: err.stack,
     });
-  } else {
-    // RENDERED WEBSITE
-    res.status(err).render('error', {
-      title: 'something went wrong',
-      msg: err.message,
-    });
   }
+  // (B) RENDERED WEBSITE
+  console.error('Error....err', err);
+  return res.status(err.statusCode).render('error', {
+    title: 'something went wrong',
+    msg: err.message,
+  });
 };
 
 const sendErrorProd = (err, req, res) => {
-  // operational errors , trusted errors, send response to client
-  if (err.isOperational) {
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message,
+  // (A) API
+  if (req.originalUrl.startsWith('/api')) {
+    // (A)operational errors , trusted errors, send response to client
+    if (err.isOperational) {
+      return res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message,
 
-      // stack: err.stack,
-    });
-  }
-  // progrmming or other errors, please dont leak the errors to the clients
-  else {
+        // stack: err.stack,
+      });
+    }
+    //(B) progrmming or other errors, please dont leak the errors to the clients
+
     console.error('Error....err', err);
 
-    res.status(500).json({
+    return res.status(500).json({
       status: 'error',
       message: 'something went wrong',
     });
   }
+  // (B) RENDERED WEBSITE
+  if (err.isOperational) {
+    return res.status(err.statusCode).render('error', {
+      title: 'something went wrong',
+      msg: err.message,
+    });
+  }
+  // progrmming or other errors, please dont leak the errors to the clients
+
+  console.error('Error....err', err);
+
+  return res.status(err.statusCode).render('error', {
+    title: 'something went wrong',
+    msg: 'Please try again later',
+  });
 };
 
 module.exports = (err, req, res, next) => {
@@ -69,6 +87,7 @@ module.exports = (err, req, res, next) => {
     sendErrorProd(err, req, res);
   } else if (process.env.NODE_ENV === 'development') {
     let error = { ...err };
+    error.message = err.message;
     // console.log(error);
     if (error.name === 'CastError') error = handleCastErrorDb(error);
     if (error.code === 11000) error = handleDuplicateFieldsDb(error);

@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const { type } = require('os');
 
 const userSchema = mongoose.Schema({
   name: {
@@ -24,6 +25,16 @@ const userSchema = mongoose.Schema({
     type: String,
     enum: ['user', 'guide', 'lead-guide', 'admin'],
     default: 'user',
+  },
+  phoneNumber: {
+    type: Number,
+    validate: {
+      validator: function (v) {
+        return /^\d{10}$/.test(v); // Regular expression to match exactly 10 digits
+      },
+      message: 'This is not a valid 10-digit number!',
+    },
+    default: 1234567890,
   },
   password: {
     type: String,

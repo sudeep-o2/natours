@@ -42,3 +42,4 @@ export const logout = async () => {
     showAlert('error', 'Error logging out! try again');
   }
 };
+
