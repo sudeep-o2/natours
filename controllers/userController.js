@@ -1,8 +1,34 @@
+const multer = require('multer');
 const fs = require('fs');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const factory = require('./handlerFactory');
+
+const multerStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/img/users');
+  },
+  filename: (req, file, cb) => {
+    const ext = file.mimetype.split('/')[1];
+    cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
+  },
+});
+
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image Please upload image', 400), false);
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+
+exports.uploadUserPhoto = upload.single('photo');
 
 // const tours = JSON.parse(
 //   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`),
@@ -22,6 +48,8 @@ exports.getMe = (req, res, next) => {
 };
 
 exports.updateMe = catchAsync(async (req, res, next) => {
+  console.log(req.file);
+  console.log(req.body);
   // if user post's password data
   if (req.body.password || req.body.passwordConfirm) {
     return next(
@@ -34,13 +62,16 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 
   // update user document
   const filteredObj = filterObj(req.body, 'name', 'email');
+
+  if (req.file) filteredObj.photo = req.file.filename;
+
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredObj, {
     new: true,
     runValidators: true,
   });
 
   res.status(200).json({
-    staus: 'success',
+    status: 'success',
     data: updatedUser,
   });
 });
