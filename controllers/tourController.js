@@ -58,6 +58,10 @@ exports.uploadTourImages = upload.fields([
   { name: 'images', maxCount: 3 },
 ]);
 
+//for one- upload.single('image')   req.file
+//for multiple- upload.array('images',5)   req.files
+//for mixture - upload.fields([{name:'imageCover',maxCount:1},{name:'images}])
+
 exports.resizeTourImages = catchAsync(async (req, res, next) => {
   if (!req.files.imageCover || !req.files.images) return next();
 
