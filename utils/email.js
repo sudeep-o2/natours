@@ -2,19 +2,32 @@ const nodemailer = require('nodemailer');
 const pug = require('pug');
 const { htmlToText } = require('html-to-text');
 const { text } = require('express');
+// const { MailerSend, EmailParams, Sender, Recipient } = require('mailersend');
 
 module.exports = class Email {
   constructor(user, url) {
     this.to = user.email;
     this.firstName = user.name.split(' ')[0];
     this.url = url;
-    this.from = `Sudeep Savai <${process.env.EMAIL_FROM}>`;
+    // this.from = `Sudeep Savai <${process.env.EMAIL_FROM}>`;
+    this.from = `Sudeep Savai <${process.env.MAILSENDER_EMAIL_FROM}>`;
+    // this.from = `trial-0r83ql35jzp4zw1j.mlsender.net`;
   }
 
   newTransport() {
-    if (process.env.NODE_env === 'production') {
-      // sendgrid
-      return 1;
+    if (process.env.NODE_ENV === 'production') {
+      // mailersend
+      console.log('in prod');
+      return nodemailer.createTransport({
+        host: process.env.MAILERSEND_EMAIL_HOST,
+        port: process.env.MAILERSEND_EMAIL_PORT,
+        secure: false,
+
+        auth: {
+          user: process.env.MAILER_SENDER_USERNAME,
+          pass: process.env.MAILER_SENDER_PASSWORD,
+        },
+      });
     }
 
     return nodemailer.createTransport({
@@ -53,6 +66,13 @@ module.exports = class Email {
 
   async sendWelcome() {
     await this.send('welcome', 'Welcome to Natours Family!');
+  }
+
+  async sendPasswordReset() {
+    await this.send(
+      'passwordReset',
+      'Your password reset token (valid for 10 min)',
+    );
   }
 };
 

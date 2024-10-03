@@ -168,7 +168,7 @@ exports.restrictTo = (...roles) => {
     if (!roles.includes(req.user.role)) {
       return next(new AppError('you do not have permission ', 403));
     }
-    next();
+    next(); 
   };
 };
 
@@ -186,9 +186,6 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   //(3) send it to users email
-  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetpassword/${resetToken}`;
-  const message = `Forgot your password , submit a patch request with your new password and confirm password to
-  ${resetURL}\n If you didn't forgot your password , please ignore the email `;
 
   try {
     // await sendEmail({
@@ -196,6 +193,10 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     //   subject: `Your password reset token , valid for 10 min ${message}`,
     //   body: message,
     // });
+    const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetpassword/${resetToken}`;
+
+    await new Email(user, resetURL).sendPasswordReset();
+
     res.status(200).json({
       status: 'success',
       message: 'token sent to email!',
