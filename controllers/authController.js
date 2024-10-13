@@ -75,7 +75,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
   //(2)verify email and passwpord if exist
   const user = await User.findOne({ email }).select('+password');
-  // console.log(user);
+  console.log(user);
 
   if (!user || !(await user.correctPassword(password, user.password)))
     return next(new AppError('Email or Password is Incorrect', 401));
@@ -131,6 +131,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   next();
 });
 
+// only for rendered pages, no errors!
 exports.isLoggedIn = async (req, res, next) => {
   //(1) get token and check if it's there
   if (req.cookies.jwt) {
@@ -168,7 +169,7 @@ exports.restrictTo = (...roles) => {
     if (!roles.includes(req.user.role)) {
       return next(new AppError('you do not have permission ', 403));
     }
-    next(); 
+    next();
   };
 };
 
